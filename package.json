@@ -1,0 +1,21 @@
+{
+  "name": "ws-emperor-game-backend",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "front:compile": "npx babel front/src --out-dir front/compiled --presets react-app/prod",
+    "serve": "node index.js",
+    "start": "run-s front:compile serve"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.17.1",
+    "socket.io": "^3.1.2"
+  },
+  "devDependencies": {
+    "babel-cli": "^6.26.0",
+    "babel-preset-react-app": "^3.1.2"
+  }
+}
