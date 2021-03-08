@@ -16,10 +16,32 @@ class Lobby {
   }
 
   addPlayer(socketId, nickname) {
-    if (!this.locked) {
+    if (!this.locked && !Object.keys(this.nicknames).includes(socketId)) {
       this.nicknames[socketId] = nickname;
     }
   }
+
+  setNickname(socketId, newNickname) {
+    if (!this.locked && Object.keys(this.nicknames).includes(socketId)) {
+      this.nicknames[socketId] = newNickname;
+    }
+  }
+}
+
+function getLobbyOf(socket) {
+  if (socket.rooms.size <= 1) {
+    throw new Error("Not in a room");
+  }
+
+  let roomName;
+  for (const room of socket.rooms) {
+    if (room === socket.id) {
+      continue;
+    }
+    roomName = room;
+  }
+
+  return lobbies.find((l) => l.name === roomName);
 }
 
 app.use(express.static("front"));
@@ -72,20 +94,13 @@ io.on("connection", (socket) => {
 
     console.log(`${socket.id} joined ${lobbyName}`);
     socket.emit("joined lobby", lobby);
-    socket.in(lobbyName).broadcast.emit("updated lobby", lobby);
+    io.in(lobbyName).emit("updated lobby", lobby);
   });
 
   socket.on("set nickname", (newNickname) => {
-    if (socket.rooms.length <= 1) {
-      return socket.emit("error", "must be in a lobby to set nickname");
-    }
-
-    const lobbyName = socket.rooms[1];
-    const lobby = lobbies.find((l) => l.name === lobbyName);
-
-    lobby.nicknames[socket.id] = newNickname;
-
-    socket.in(lobbyName).emit("updated lobby", lobby);
+    const lobby = getLobbyOf(socket);
+    lobby.setNickname(socket.id, newNickname);
+    io.in(lobby.name).emit("updated lobby", lobby);
   });
 
   socket.on("disconnect", () => {
