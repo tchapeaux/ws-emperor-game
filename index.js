@@ -11,6 +11,14 @@ class Lobby {
     this.nicknames = {};
     this.mysteryName = {};
     this.ownedBy = {};
+
+    this.locked = false;
+  }
+
+  addPlayer(socketId, nickname) {
+    if (!this.locked) {
+      this.nicknames[socketId] = nickname;
+    }
   }
 }
 
@@ -36,9 +44,10 @@ io.on("connection", (socket) => {
     lobbies.push(lobby);
 
     socket.join(lobbyName);
-    lobby.nicknames[socket.id] = `Anonymous #${
-      Object.values(lobby.nicknames).length + 1
-    }`;
+    lobby.addPlayer(
+      socket.id,
+      `Anonymous #${Object.values(lobby.nicknames).length + 1}`
+    );
 
     console.log(`${socket.id} created and joined ${lobbyName}`);
     socket.emit("joined lobby", lobby);
@@ -56,9 +65,10 @@ io.on("connection", (socket) => {
     }
 
     socket.join(lobbyName);
-    lobby.nicknames[socket.id] = `Anonymous #${
-      Object.values(lobby.nicknames).length + 1
-    }`;
+    lobby.addPlayer(
+      socket.id,
+      `Anonymous #${Object.values(lobby.nicknames).length + 1}`
+    );
 
     console.log(`${socket.id} joined ${lobbyName}`);
     socket.emit("joined lobby", lobby);
