@@ -26,7 +26,7 @@ button {
 button:hover,
 button:focus {
   border: 2px olivedrab solid;
-  background-color: transparent;
+  background-color: #fff;
   color: olivedrab;
 }
 

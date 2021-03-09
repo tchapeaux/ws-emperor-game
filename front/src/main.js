@@ -183,7 +183,7 @@ function BlameCard(props) {
                 </option>
               ))}
           </select>
-          <button onClick={onSubmit}>Blame</button>
+          <button onClick={onSubmit}>Guess</button>
         </React.Fragment>
       ) : null}
       {isAlreadyOwned ? (
@@ -223,11 +223,11 @@ function BlameTheMysteries(props) {
         ))}
       </ul>
       {isPlayerOwned ? (
-        <p>You were owned by {lobby.nicknames[lobby.ownedBy[socket.id]]}</p>
+        <p>You were defeated by {lobby.nicknames[lobby.ownedBy[socket.id]]}</p>
       ) : null}
       {playerYouOwned.length > 0 ? (
         <p>
-          You owned:
+          You defeated:
           <ul>
             {playerYouOwned.map(([owneeId, ownerId]) => (
               <li key={owneeId}>{lobby.nicknames[owneeId]}</li>
