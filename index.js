@@ -31,6 +31,7 @@ class Lobby {
     this.phase1Locked = false;
     this.displayOrder = null;
     this.turnOfPlayer = null;
+    this.lastAction = null;
 
     this.andTheWinnerIs = null;
   }
@@ -119,9 +120,11 @@ class Lobby {
     // Finally, let's do the blaming
     const isBlamingCorrect = this.mysteryNames[blamedId] === mysteryName;
     if (isBlamingCorrect) {
+      this.lastAction = `✅ ${this.nicknames[blamerId]} guessed ${mysteryName} was written by ${this.nicknames[blamedId]}`;
       this.ownedBy[blamedId] = blamerId;
     } else {
       // No owning, but change turn of player
+      this.lastAction = `❌ ${this.nicknames[blamerId]} guessed ${mysteryName} was written by ${this.nicknames[blamedId]}`;
       this.turnOfPlayer = blamedId;
     }
 

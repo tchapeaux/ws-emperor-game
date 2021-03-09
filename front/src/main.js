@@ -216,6 +216,11 @@ function BlameTheMysteries(props) {
           turn to guess!
         </p>
       ) : null}
+      {lobby.lastAction ? (
+        <p>
+          <strong>Last action:</strong> {lobby.lastAction}
+        </p>
+      ) : null}
 
       <ul className="mysteryList">
         {lobby.displayOrder.map((socketId) => (
