@@ -23,6 +23,8 @@ class Lobby {
   constructor(name, hostId) {
     this.name = name;
     this.host = hostId;
+    this.lastAccessDate = new Date();
+
     this.nicknames = {};
     this.mysteryNames = {};
     this.ownedBy = {};
@@ -186,7 +188,11 @@ function getLobbyOf(socket) {
     roomName = room;
   }
 
-  return lobbies.find((l) => l.name === roomName);
+  const room = lobbies.find((l) => l.name === roomName);
+  if (room) {
+    room.lastAccessDate = new Date();
+  }
+  return room;
 }
 
 app.use(express.static("front"));
