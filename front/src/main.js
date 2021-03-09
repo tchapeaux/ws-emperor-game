@@ -100,11 +100,13 @@ function InLobby(props) {
 function ChooseMysteryName(props) {
   const { lobby } = props;
   const [mysteryName, setMysteryName] = React.useState("");
-  const [hasSubmitted, setHasSubmitted] = React.useState(false);
+
+  const submittedName = lobby.mysteryNames[socket.id];
+  const hasSubmitted = !!submittedName;
 
   function onSubmit() {
     socket.emit("choose mystery", mysteryName);
-    setHasSubmitted(true);
+    setMysteryName("");
   }
 
   const haveChosenCount = Object.values(lobby.mysteryNames).length;
@@ -115,7 +117,7 @@ function ChooseMysteryName(props) {
       <h3>Choose your Mystery Name</h3>
       {hasSubmitted ? (
         <p>
-          You have chosen: <strong>{mysteryName}</strong>
+          You have chosen: <strong>{submittedName}</strong>
         </p>
       ) : (
         <React.Fragment>
@@ -205,16 +207,16 @@ function BlameTheMysteries(props) {
   return (
     <React.Fragment>
       <h3>Who wrote what?</h3>
-      {isInTurn ? (
+      {lobby.turnOfPlayer ? (
         <p>
-          <strong>It's your turn to blame!</strong>
+          It's{" "}
+          <strong>
+            {isInTurn ? "your" : `${lobby.nicknames[lobby.turnOfPlayer]}'s`}
+          </strong>{" "}
+          turn to guess!
         </p>
-      ) : (
-        <p>
-          It's <strong>{lobby.nicknames[lobby.turnOfPlayer]}</strong>'s turn to
-          blame!
-        </p>
-      )}
+      ) : null}
+
       <ul className="mysteryList">
         {lobby.displayOrder.map((socketId) => (
           <BlameCard key={socketId} socketId={socketId} lobby={lobby} />
@@ -290,6 +292,14 @@ class App extends React.PureComponent {
                 <p class="winner-name">
                   {lobby.nicknames[lobby.andTheWinnerIs]}
                 </p>
+
+                {lobby.host === socket.id ? (
+                  <p>
+                    <button onClick={() => socket.emit("restart game")}>
+                      Restart
+                    </button>
+                  </p>
+                ) : null}
               </React.Fragment>
             ) : null}
           </React.Fragment>

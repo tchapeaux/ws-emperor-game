@@ -134,6 +134,20 @@ class Lobby {
       this.andTheWinnerIs = blamerId;
     }
   }
+
+  restart(socketId) {
+    if (socketId !== this.host) {
+      return;
+    }
+
+    this.mysteryNames = {};
+    this.ownedBy = {};
+    this.phase1Locked = false;
+    this.displayOrder = null;
+    this.turnOfPlayer = null;
+
+    this.andTheWinnerIs = null;
+  }
 }
 
 if (DEBUG) {
@@ -258,6 +272,15 @@ io.on("connection", (socket) => {
       return socket.emit("error", "Lobby does not exist");
     }
     lobby.blame(socket.id, mysteryName, blamedId);
+    io.in(lobby.name).emit("updated lobby", lobby);
+  });
+
+  socket.on("restart game", () => {
+    const lobby = getLobbyOf(socket);
+    if (!lobby) {
+      return socket.emit("error", "Lobby does not exist");
+    }
+    lobby.restart(socket.id);
     io.in(lobby.name).emit("updated lobby", lobby);
   });
 
