@@ -3,6 +3,8 @@ app = express();
 const http = require("http").Server(app);
 const io = require("socket.io")(http);
 
+const DEBUG = false;
+
 const lobbies = [];
 
 function shuffleArray(a) {
@@ -36,6 +38,12 @@ class Lobby {
   addPlayer(socketId, nickname) {
     if (!this.locked && !Object.keys(this.nicknames).includes(socketId)) {
       this.nicknames[socketId] = nickname;
+    }
+
+    if (DEBUG) {
+      // DEBUG !!!!!
+      // set last player as host
+      this.host = socketId;
     }
   }
 
@@ -73,6 +81,10 @@ class Lobby {
     this.phase1Locked = true;
     this.displayOrder = shuffleArray(playerIds);
     this.turnOfPlayer = playerIds[getRandomInt(playerIds.length)];
+
+    if (DEBUG) {
+      this.turnOfPlayer = this.host;
+    }
   }
 
   blame(blamerId, mysteryName, blamedId) {
@@ -122,6 +134,26 @@ class Lobby {
       this.andTheWinnerIs = blamerId;
     }
   }
+}
+
+if (DEBUG) {
+  const DEBUG_LOBBY = new Lobby("debug", "debug-admin");
+  DEBUG_LOBBY.nicknames = {
+    "debug-admin": "Bernard",
+    "player-2": "Tiphanie",
+    "player-3": "Benjamin",
+    "player-4": "Mathilde",
+  };
+  DEBUG_LOBBY.mysteryNames = {
+    "debug-admin": "Frodon",
+    "player-2": "Sam",
+    "player-3": "Boromir",
+    "player-4": "Hermione Granger",
+  };
+  DEBUG_LOBBY.ownedBy = {};
+  DEBUG_LOBBY.locked = false;
+
+  lobbies.push(DEBUG_LOBBY);
 }
 
 function getLobbyOf(socket) {
