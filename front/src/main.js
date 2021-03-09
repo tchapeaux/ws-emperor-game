@@ -11,8 +11,7 @@ function ErrorBanner(props) {
   ) : null;
 }
 
-function LobbySelection(props) {
-  const { socket } = props;
+function LobbySelection() {
   const [roomName, setRoomName] = React.useState("");
 
   function onCreateLobby() {
@@ -56,6 +55,10 @@ function InLobby(props) {
     socket.emit("set nickname", newNickname);
   }
 
+  function onLaunchGame() {
+    socket.emit("launch game");
+  }
+
   return (
     <section id="in-lobby">
       <h2>
@@ -69,14 +72,142 @@ function InLobby(props) {
             {nickname}
             {socket.id === id ? (
               <React.Fragment>
-                <span> (me) </span>
-                <button onClick={onEditNickname}>edit</button>
+                <strong> (me) </strong>
+                {!lobby.locked ? (
+                  <button onClick={onEditNickname}>edit</button>
+                ) : null}
               </React.Fragment>
             ) : null}
           </li>
         ))}
       </ul>
+      {lobby.host === socket.id && !lobby.locked ? (
+        <React.Fragment>
+          <h3>Launch game</h3>
+          <button onClick={onLaunchGame}>Launch</button>
+        </React.Fragment>
+      ) : null}
     </section>
+  );
+}
+
+function ChooseMysteryName(props) {
+  const { lobby } = props;
+  const [mysteryName, setMysteryName] = React.useState("");
+  const [hasSubmitted, setHasSubmitted] = React.useState(false);
+
+  function onSubmit() {
+    socket.emit("choose mystery", mysteryName);
+    setHasSubmitted(true);
+  }
+
+  const haveChosenCount = Object.values(lobby.mysteryNames).length;
+  const totalPlayerCount = Object.values(lobby.nicknames).length;
+
+  return (
+    <React.Fragment>
+      <h3>Choose your Mystery Name</h3>
+      {hasSubmitted ? (
+        <p>
+          You have chosen:<strong>{mysteryName}</strong>
+        </p>
+      ) : (
+        <React.Fragment>
+          <input
+            onChange={({ target: { value } }) => setMysteryName(value)}
+            value={mysteryName}
+          />
+          <button onClick={onSubmit}>Submit</button>
+        </React.Fragment>
+      )}
+      {haveChosenCount < totalPlayerCount ? (
+        <p>
+          Have chosen: {haveChosenCount} / {totalPlayerCount}
+        </p>
+      ) : null}
+    </React.Fragment>
+  );
+}
+
+function BlameCard(props) {
+  const { lobby, socketId } = props;
+  const [blamedId, setBlamedId] = React.useState("none");
+
+  const mysteryName = lobby.mysteryNames[socketId];
+  const isAlreadyOwned = !!lobby.ownedBy[socketId];
+  const isInTurn = socket.id === lobby.turnOfPlayer;
+  const notOwnedPlayerIds = Object.keys(lobby.nicknames).filter(
+    (pId) => !lobby.ownedBy[pId]
+  );
+
+  function onChange({ target: { value } }) {
+    setBlamedId(value);
+  }
+
+  function onSubmit() {
+    socket.emit("blame", mysteryName, blamedId);
+  }
+
+  return (
+    <li>
+      {mysteryName}
+      {isInTurn && !isAlreadyOwned ? (
+        <React.Fragment>
+          <select value={blamedId} onChange={onChange}>
+            <option disabled={true} value={"none"}>
+              Choose a player
+            </option>
+            {notOwnedPlayerIds
+              .filter((pId) => pId !== socket.id)
+              .map((playerId) => (
+                <option key={playerId} value={playerId}>
+                  {lobby.nicknames[playerId]}
+                </option>
+              ))}
+          </select>
+          <button onClick={onSubmit}>Blame</button>
+        </React.Fragment>
+      ) : null}
+      {isAlreadyOwned ? (
+        <p>
+          Was: <strong>{lobby.nicknames[socketId]}</strong>
+        </p>
+      ) : null}
+    </li>
+  );
+}
+
+function BlameTheMysteries(props) {
+  const { lobby } = props;
+
+  const isPlayerOwned = !!lobby.ownedBy[socket.id];
+  const playerYouOwned = Object.entries(lobby.ownedBy).filter(
+    ([owneeId, ownerId]) => ownerId === socket.id
+  );
+
+  return (
+    <React.Fragment>
+      <h3>Who wrote what?</h3>
+      <p>Whose turn is it to blame: {lobby.nicknames[lobby.turnOfPlayer]}</p>
+      <ul>
+        {lobby.displayOrder.map((socketId) => (
+          <BlameCard key={socketId} socketId={socketId} lobby={lobby} />
+        ))}
+      </ul>
+      {isPlayerOwned ? (
+        <p>You were owned by {lobby.nicknames[lobby.ownedBy[socket.id]]}</p>
+      ) : null}
+      {playerYouOwned.length > 0 ? (
+        <p>
+          You owned:
+          <ul>
+            {playerYouOwned.map(([owneeId, ownerId]) => (
+              <li key={owneeId}>{lobby.nicknames[owneeId]}</li>
+            ))}
+          </ul>
+        </p>
+      ) : null}
+    </React.Fragment>
   );
 }
 
@@ -103,19 +234,31 @@ class App extends React.PureComponent {
   }
 
   render() {
+    const { appState, errorMsg, lobby } = this.state;
+
     return (
       <React.Fragment>
         <h1>Le jeu de l'empereur</h1>
 
         <ErrorBanner
-          msg={this.state.errorMsg}
+          msg={errorMsg}
           onClear={() => this.setState({ errorMsg: null })}
         />
-        {this.state.appState === "CHOOSE_LOBBY" ? (
-          <LobbySelection socket={socket} />
-        ) : null}
-        {this.state.appState === "IN_LOBBY" ? (
-          <InLobby lobby={this.state.lobby} />
+        {appState === "CHOOSE_LOBBY" ? <LobbySelection /> : null}
+        {appState === "IN_LOBBY" ? (
+          <React.Fragment>
+            <InLobby lobby={lobby} />
+            {lobby.locked ? <ChooseMysteryName lobby={lobby} /> : null}
+            {lobby.phase1Locked ? <BlameTheMysteries lobby={lobby} /> : null}
+            {lobby.andTheWinnerIs ? (
+              <React.Fragment>
+                <h3>And the Winner is...</h3>
+                <p class="winner-name">
+                  {lobby.nicknames[lobby.andTheWinnerIs]}
+                </p>
+              </React.Fragment>
+            ) : null}
+          </React.Fragment>
         ) : null}
       </React.Fragment>
     );

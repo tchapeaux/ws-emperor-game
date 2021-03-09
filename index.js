@@ -5,14 +5,32 @@ const io = require("socket.io")(http);
 
 const lobbies = [];
 
+function shuffleArray(a) {
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function getRandomInt(max) {
+  return Math.floor(Math.random() * Math.floor(max));
+}
+
 class Lobby {
-  constructor(name) {
+  constructor(name, hostId) {
     this.name = name;
+    this.host = hostId;
     this.nicknames = {};
-    this.mysteryName = {};
+    this.mysteryNames = {};
     this.ownedBy = {};
 
     this.locked = false;
+    this.phase1Locked = false;
+    this.displayOrder = null;
+    this.turnOfPlayer = null;
+
+    this.andTheWinnerIs = null;
   }
 
   addPlayer(socketId, nickname) {
@@ -26,11 +44,89 @@ class Lobby {
       this.nicknames[socketId] = newNickname;
     }
   }
+
+  lockAndGo(socketId) {
+    if (socketId === this.host) {
+      this.locked = true;
+    }
+  }
+
+  setMysteryName(socketId, mysteryName) {
+    if (
+      this.locked === true &&
+      !Object.keys(this.mysteryNames).includes(socketId)
+    ) {
+      this.mysteryNames[socketId] = mysteryName;
+
+      if (
+        Object.keys(this.mysteryNames).length ===
+        Object.keys(this.nicknames).length
+      ) {
+        this.prepareGuessingGame();
+      }
+    }
+  }
+
+  prepareGuessingGame() {
+    const playerIds = Object.keys(this.nicknames);
+
+    this.phase1Locked = true;
+    this.displayOrder = shuffleArray(playerIds);
+    this.turnOfPlayer = playerIds[getRandomInt(playerIds.length)];
+  }
+
+  blame(blamerId, mysteryName, blamedId) {
+    const playerIds = Object.keys(this.nicknames);
+    const mysteryNames = Object.values(this.mysteryNames);
+
+    // Some checks
+
+    // blamer and blamed exist
+    if (!playerIds.includes(blamerId) || !playerIds.includes(blamedId)) {
+      return;
+    }
+
+    // mysteryName exists
+    if (!mysteryNames.includes(mysteryName)) {
+      return;
+    }
+
+    // it is the turn of the blamer
+    if (this.turnOfPlayer !== blamerId) {
+      return;
+    }
+
+    // blamer and blamed are not owned
+    if (
+      Object.keys(this.ownedBy).includes(blamerId) ||
+      Object.keys(this.ownedBy).includes(blamedId)
+    ) {
+      return;
+    }
+
+    // Finally, let's do the blaming
+    const isBlamingCorrect = this.mysteryNames[blamedId] === mysteryName;
+    if (isBlamingCorrect) {
+      this.ownedBy[blamedId] = blamerId;
+    } else {
+      // No owning, but change turn of player
+      this.turnOfPlayer = blamedId;
+    }
+
+    // WIN condition
+    if (
+      Object.keys(this.ownedBy).length ===
+      Object.keys(this.nicknames).length - 1
+    ) {
+      this.turnOfPlayer = null;
+      this.andTheWinnerIs = blamerId;
+    }
+  }
 }
 
 function getLobbyOf(socket) {
   if (socket.rooms.size <= 1) {
-    throw new Error("Not in a room");
+    return undefined;
   }
 
   let roomName;
@@ -62,7 +158,7 @@ io.on("connection", (socket) => {
       return socket.emit("error", "Already in a lobby");
     }
 
-    const lobby = new Lobby(lobbyName);
+    const lobby = new Lobby(lobbyName, socket.id);
     lobbies.push(lobby);
 
     socket.join(lobbyName);
@@ -99,7 +195,37 @@ io.on("connection", (socket) => {
 
   socket.on("set nickname", (newNickname) => {
     const lobby = getLobbyOf(socket);
+    if (!lobby) {
+      return socket.emit("error", "Lobby does not exist");
+    }
     lobby.setNickname(socket.id, newNickname);
+    io.in(lobby.name).emit("updated lobby", lobby);
+  });
+
+  socket.on("launch game", () => {
+    const lobby = getLobbyOf(socket);
+    if (!lobby) {
+      return socket.emit("error", "Lobby does not exist");
+    }
+    lobby.lockAndGo(socket.id);
+    io.in(lobby.name).emit("updated lobby", lobby);
+  });
+
+  socket.on("choose mystery", (mysteryName) => {
+    const lobby = getLobbyOf(socket);
+    if (!lobby) {
+      return socket.emit("error", "Lobby does not exist");
+    }
+    lobby.setMysteryName(socket.id, mysteryName);
+    io.in(lobby.name).emit("updated lobby", lobby);
+  });
+
+  socket.on("blame", (mysteryName, blamedId) => {
+    const lobby = getLobbyOf(socket);
+    if (!lobby) {
+      return socket.emit("error", "Lobby does not exist");
+    }
+    lobby.blame(socket.id, mysteryName, blamedId);
     io.in(lobby.name).emit("updated lobby", lobby);
   });
 
