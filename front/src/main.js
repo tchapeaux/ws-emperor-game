@@ -187,9 +187,15 @@ function BlameCard(props) {
         </React.Fragment>
       ) : null}
       {isAlreadyOwned ? (
-        <p>
-          Was: <strong>{lobby.nicknames[socketId]}</strong>
-        </p>
+        <React.Fragment>
+          <p>
+            Was: <strong>{lobby.nicknames[socketId]}</strong>
+          </p>
+          <p>
+            Guessed by:{" "}
+            <strong>{lobby.nicknames[lobby.ownedBy[socketId]]}</strong>
+          </p>
+        </React.Fragment>
       ) : null}
     </li>
   );
