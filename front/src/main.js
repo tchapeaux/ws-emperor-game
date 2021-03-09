@@ -37,10 +37,10 @@ function LobbySelection() {
         value={roomName}
       />
       <button id="create-btn" onClick={onCreateLobby}>
-        Create
+        Create room
       </button>
       <button id="join-btn" onClick={onJoinLobby}>
-        Join
+        Join room
       </button>
       <p></p>
     </section>
@@ -59,17 +59,20 @@ function InLobby(props) {
     socket.emit("launch game");
   }
 
+  const nbOfPlayers = Object.keys(lobby.nicknames).length;
+  const canLaunch = nbOfPlayers > 3;
+
   return (
     <section id="in-lobby">
       <h2>
-        In lobby <span id="lobby-name">{lobby.name}</span>
+        Your room: <span id="lobby-name">{lobby.name}</span>
       </h2>
 
       <h3>Players</h3>
       <ul id="messages">
         {Object.entries(lobby.nicknames).map(([id, nickname]) => (
           <li key={id}>
-            {nickname}
+            😸 {nickname}
             {socket.id === id ? (
               <React.Fragment>
                 <strong> (me) </strong>
@@ -84,7 +87,10 @@ function InLobby(props) {
       {lobby.host === socket.id && !lobby.locked ? (
         <React.Fragment>
           <h3>Launch game</h3>
-          <button onClick={onLaunchGame}>Launch</button>
+          {canLaunch ? null : <p>You need at least 3 players to launch</p>}
+          <button disabled={!canLaunch} onClick={onLaunchGame}>
+            Launch
+          </button>
         </React.Fragment>
       ) : null}
     </section>
@@ -105,11 +111,11 @@ function ChooseMysteryName(props) {
   const totalPlayerCount = Object.values(lobby.nicknames).length;
 
   return (
-    <React.Fragment>
+    <section id="choose-your-mystery">
       <h3>Choose your Mystery Name</h3>
       {hasSubmitted ? (
         <p>
-          You have chosen:<strong>{mysteryName}</strong>
+          You have chosen: <strong>{mysteryName}</strong>
         </p>
       ) : (
         <React.Fragment>
@@ -117,7 +123,12 @@ function ChooseMysteryName(props) {
             onChange={({ target: { value } }) => setMysteryName(value)}
             value={mysteryName}
           />
-          <button onClick={onSubmit}>Submit</button>
+          <button
+            disabled={!mysteryName || mysteryName.length === 0}
+            onClick={onSubmit}
+          >
+            Submit
+          </button>
         </React.Fragment>
       )}
       {haveChosenCount < totalPlayerCount ? (
@@ -125,7 +136,7 @@ function ChooseMysteryName(props) {
           Have chosen: {haveChosenCount} / {totalPlayerCount}
         </p>
       ) : null}
-    </React.Fragment>
+    </section>
   );
 }
 
@@ -148,8 +159,13 @@ function BlameCard(props) {
     socket.emit("blame", mysteryName, blamedId);
   }
 
+  const classNames = ["blameCard"];
+  if (isAlreadyOwned) {
+    classNames.push("guessed");
+  }
+
   return (
-    <li>
+    <li className={classNames.join(" ")}>
       {mysteryName}
       {isInTurn && !isAlreadyOwned ? (
         <React.Fragment>
@@ -181,6 +197,7 @@ function BlameTheMysteries(props) {
   const { lobby } = props;
 
   const isPlayerOwned = !!lobby.ownedBy[socket.id];
+  const isInTurn = socket.id === lobby.turnOfPlayer;
   const playerYouOwned = Object.entries(lobby.ownedBy).filter(
     ([owneeId, ownerId]) => ownerId === socket.id
   );
@@ -188,8 +205,17 @@ function BlameTheMysteries(props) {
   return (
     <React.Fragment>
       <h3>Who wrote what?</h3>
-      <p>Whose turn is it to blame: {lobby.nicknames[lobby.turnOfPlayer]}</p>
-      <ul>
+      {isInTurn ? (
+        <p>
+          <strong>It's your turn to blame!</strong>
+        </p>
+      ) : (
+        <p>
+          It's <strong>{lobby.nicknames[lobby.turnOfPlayer]}</strong>'s turn to
+          blame!
+        </p>
+      )}
+      <ul className="mysteryList">
         {lobby.displayOrder.map((socketId) => (
           <BlameCard key={socketId} socketId={socketId} lobby={lobby} />
         ))}
@@ -231,6 +257,14 @@ class App extends React.PureComponent {
     socket.on("updated lobby", (data) => {
       this.setState({ lobby: data });
     });
+
+    // auto-join lobby if there is a lobby= URL parameter
+    const queryString = window.location.search;
+    const urlParams = new URLSearchParams(queryString);
+    const lobbyParam = urlParams.get("lobby");
+    if (lobbyParam) {
+      socket.emit("join lobby", lobbyParam);
+    }
   }
 
   render() {

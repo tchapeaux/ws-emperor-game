@@ -2,6 +2,41 @@ body {
   color: #333;
   background-color: plum;
   box-sizing: border-box;
+
+  font-family: "Lora", serif;
+  font-size: 1.5em;
+}
+
+input {
+  font-size: 1em;
+  width: 250px;
+}
+
+button {
+  font-size: 1em;
+  padding: 5px 15px;
+  cursor: pointer;
+  border: 2px transparent solid;
+
+  border-radius: 25px;
+  background-color: olivedrab;
+  color: #fff;
+}
+
+button:hover,
+button:focus {
+  border: 2px olivedrab solid;
+  background-color: transparent;
+  color: olivedrab;
+}
+
+button:disabled {
+  opacity: 0.3;
+  cursor: none;
+}
+
+select {
+  font-size: 1em;
 }
 
 #error-banner {
@@ -12,6 +47,11 @@ body {
   margin: 15px;
 }
 
+#choose-lobby > *,
+#choose-your-mystery > * {
+  margin: 0px 5px;
+}
+
 #main {
   width: 90%;
   max-width: 750px;
@@ -19,4 +59,30 @@ body {
   margin: 15px auto;
   padding: 15px 50px;
   background-color: bisque;
+}
+
+.mysteryList {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.blameCard {
+  background-color: #fff;
+  margin: 15px;
+  padding: 15px;
+  align-items: center;
+  border: 1px solid black;
+
+  display: flex;
+  flex-direction: column;
+}
+
+.guessed {
+  opacity: 0.7;
+}
+
+.blameCard > * {
+  margin: 5px 0px;
 }

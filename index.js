@@ -179,7 +179,7 @@ io.on("connection", (socket) => {
 
     const lobby = lobbies.find((l) => l.name === lobbyName);
     if (!lobby) {
-      return socket.emit("error", "Lobby does not exist");
+      return socket.emit("error", `Lobby ${lobbyName} does not exist`);
     }
 
     socket.join(lobbyName);
