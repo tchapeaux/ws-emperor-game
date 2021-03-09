@@ -219,7 +219,7 @@ function BlameTheMysteries(props) {
           <strong>
             {isInTurn ? "your" : `${lobby.nicknames[lobby.turnOfPlayer]}'s`}
           </strong>{" "}
-          turn to guess!
+          turn to guess.
         </p>
       ) : null}
       {lobby.lastAction ? (
@@ -285,7 +285,7 @@ class App extends React.PureComponent {
 
     return (
       <React.Fragment>
-        <h1>Le jeu de l'empereur</h1>
+        <h1>Le jeu de l'Empereur</h1>
 
         <ErrorBanner
           msg={errorMsg}
