@@ -285,7 +285,24 @@ class App extends React.PureComponent {
 
     return (
       <React.Fragment>
-        <h1>Le jeu de l'Empereur</h1>
+        <h1>The Emperor's Game</h1>
+
+        <details>
+          <summary>Rules</summary>
+          <ul>
+            <li>🎧 Best played while on a call with your friends</li>
+            <li>👋 Create a lobby and invite your friends</li>
+            <li>
+              👻 Each player choses a mystery name (famous people, fictional
+              people, whatev.)
+            </li>
+            <li>🎯 Guess which player wrote one of the mystery names</li>
+            <li>❌ If you guess wrong, it's their turn to guess</li>
+            <li>
+              ✅ If you guess right, they are eliminated, and you keep guessing
+            </li>
+          </ul>
+        </details>
 
         <ErrorBanner
           msg={errorMsg}
