@@ -95,7 +95,7 @@ function InLobby(props) {
                   ) : null}
                 </React.Fragment>
               ) : null}
-              {isHost && socket.id !== id ? (
+              {isHost && !lobby.locked && socket.id !== id ? (
                 <React.Fragment>
                   {" "}
                   <button className={"danger"} onClick={() => onKick(id)}>
