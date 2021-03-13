@@ -1,3 +1,5 @@
+const { shuffleArray, getRandomInt } = require("./helpers.js");
+
 module.exports = class Lobby {
   constructor(name, hostId) {
     this.name = name;
@@ -7,6 +9,7 @@ module.exports = class Lobby {
     this.nicknames = {};
     this.mysteryNames = {};
     this.ownedBy = {};
+    this.disconnected = [];
 
     this.locked = false;
     this.phase1Locked = false;
@@ -130,5 +133,40 @@ module.exports = class Lobby {
     this.turnOfPlayer = null;
 
     this.andTheWinnerIs = null;
+  }
+
+  // Host can kick player
+  // return true if the player was kicked successfully
+  kick(kickerId, kickedId) {
+    // Sanity checks
+    if (
+      kickerId === kickedId ||
+      kickerId !== this.host ||
+      !Object.keys(this.nicknames).includes(kickedId)
+    ) {
+      return false;
+    }
+
+    // Internal state check
+    if (this.locked) {
+      return false;
+    }
+
+    delete this.nicknames[kickedId];
+    return true;
+  }
+
+  disconnectPlayer(disconnectedId) {
+    if (Object.keys(this.nicknames).includes(disconnectedId)) {
+      this.disconnected.push(disconnectedId);
+    }
+  }
+
+  reconnectPlayer(reconnectedId) {
+    if (this.disconnected.includes(reconnectedId)) {
+      this.disconnected = this.disconnected.filter(
+        (id) => id !== reconnectedId
+      );
+    }
   }
 };

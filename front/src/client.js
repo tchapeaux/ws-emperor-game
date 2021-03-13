@@ -59,8 +59,13 @@ function InLobby(props) {
     socket.emit("launch game");
   }
 
+  function onKick(kickedId) {
+    socket.emit("kick player", kickedId);
+  }
+
   const nbOfPlayers = Object.keys(lobby.nicknames).length;
   const canLaunch = nbOfPlayers > 3;
+  const isHost = socket.id === lobby.host;
 
   return (
     <section id="in-lobby">
@@ -70,21 +75,36 @@ function InLobby(props) {
 
       <h3>Players</h3>
       <ul id="messages">
-        {Object.entries(lobby.nicknames).map(([id, nickname]) => (
-          <li key={id}>
-            😸 {nickname}
-            {socket.id === id ? (
-              <React.Fragment>
-                <strong> (me) </strong>
-                {!lobby.locked ? (
-                  <button onClick={onEditNickname}>edit</button>
-                ) : null}
-              </React.Fragment>
-            ) : null}
-          </li>
-        ))}
+        {Object.entries(lobby.nicknames).map(([id, nickname]) => {
+          const isDisconnected = lobby.disconnected.includes(id);
+
+          return (
+            <li key={id}>
+              😸 {nickname}
+              {socket.id === id ? (
+                <React.Fragment>
+                  <strong> (you) </strong>
+                  {!lobby.locked ? (
+                    <button onClick={onEditNickname}>change name</button>
+                  ) : null}
+                </React.Fragment>
+              ) : null}
+              {isHost && socket.id !== id ? (
+                <React.Fragment>
+                  {" "}
+                  <button className={"danger"} onClick={() => onKick(id)}>
+                    kick
+                  </button>
+                </React.Fragment>
+              ) : null}
+              {isDisconnected ? (
+                <React.Fragment>{" (disconnected)"}</React.Fragment>
+              ) : null}
+            </li>
+          );
+        })}
       </ul>
-      {lobby.host === socket.id && !lobby.locked ? (
+      {isHost && !lobby.locked ? (
         <React.Fragment>
           <h3>Launch game</h3>
           {canLaunch ? null : <p>You need at least 3 players to launch</p>}
@@ -269,6 +289,14 @@ class App extends React.PureComponent {
 
     socket.on("updated lobby", (data) => {
       this.setState({ lobby: data });
+    });
+
+    socket.on("you were kicked", () => {
+      this.setState({
+        appState: "CHOOSE_LOBBY",
+        lobby: undefined,
+        errorMsg: "You were kicked by the host",
+      });
     });
 
     // auto-join lobby if there is a lobby= URL parameter

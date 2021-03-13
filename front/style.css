@@ -23,6 +23,10 @@ button {
   color: #fff;
 }
 
+.danger {
+  background-color: orangered;
+}
+
 button:hover,
 button:focus {
   border: 2px olivedrab solid;

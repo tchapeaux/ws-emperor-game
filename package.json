@@ -6,14 +6,17 @@
   "scripts": {
     "front:compile": "npx babel front/src --out-dir front/compiled --presets react-app/prod",
     "serve": "node server.js",
-    "start": "run-s front:compile serve"
+    "serve:inspect": "node --inspect server.js",
+    "start": "run-s front:compile serve",
+    "start:inspect": "run-s front:compile serve:inspect"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
     "dotenv": "^8.2.0",
     "express": "^4.17.1",
-    "socket.io": "^3.1.2"
+    "socket.io": "^3.1.2",
+    "superheroes": "^3.0.0"
   },
   "devDependencies": {
     "babel-cli": "^6.26.0",
