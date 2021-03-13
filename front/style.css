@@ -43,6 +43,14 @@ select {
   font-size: 1em;
 }
 
+#invite-link {
+  padding: 5px;
+  background-color: white;
+  color: black;
+  font-family: monospace;
+  font-size: 0.7em;
+}
+
 #error-banner {
   background-color: lightpink;
   color: crimson;

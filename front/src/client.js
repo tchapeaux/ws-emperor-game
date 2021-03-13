@@ -66,6 +66,7 @@ function InLobby(props) {
   const nbOfPlayers = Object.keys(lobby.nicknames).length;
   const canLaunch = nbOfPlayers > 3;
   const isHost = socket.id === lobby.host;
+  const inviteLink = window.location.origin + "?lobby=" + lobby.name;
 
   return (
     <section id="in-lobby">
@@ -110,6 +111,13 @@ function InLobby(props) {
           );
         })}
       </ul>
+      {!lobby.locked ? (
+        <p>
+          Invite more people:
+          <br />
+          <span id="invite-link">{inviteLink}</span>
+        </p>
+      ) : null}
       {isHost && !lobby.locked ? (
         <React.Fragment>
           <h3>Launch game</h3>
