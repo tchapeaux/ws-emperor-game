@@ -358,16 +358,33 @@ class App extends React.PureComponent {
     });
 
     // auto-join lobby if there is a lobby= URL parameter
-    const queryString = window.location.search;
-    const urlParams = new URLSearchParams(queryString);
-    const lobbyParam = urlParams.get("lobby");
-    if (lobbyParam) {
-      socket.emit("join lobby", lobbyParam);
+    try {
+      const queryString = window.location.search;
+      const urlParams = new URLSearchParams(queryString);
+      const lobbyParam = urlParams.get("lobby");
+      if (lobbyParam) {
+        socket.emit("join lobby", lobbyParam);
+      }
+    } catch (err) {
+      if (
+        err.name === "ReferenceError" &&
+        err.message.indexOf("URLSearchParams") > -1
+      ) {
+        // Is not a supported browser
+        this.isNotSupported = true;
+      } else {
+        // Otherwise, handle the error normally
+        throw err;
+      }
     }
   }
 
   render() {
     const { appState, errorMsg, lobby } = this.state;
+
+    if (this.isNotSupported) {
+      return <p>Your browser is not supported.</p>;
+    }
 
     return (
       <React.Fragment>
