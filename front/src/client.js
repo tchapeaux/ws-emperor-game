@@ -73,6 +73,12 @@ function InLobby(props) {
         Your room: <span id="lobby-name">{lobby.name}</span>
       </h2>
 
+      {isHost ? (
+        <p>You are the host.</p>
+      ) : (
+        <p>{lobby.nicknames[lobby.host]} is the host</p>
+      )}
+
       <h3>Players</h3>
       <ul id="messages">
         {Object.entries(lobby.nicknames).map(([id, nickname]) => {
@@ -112,6 +118,9 @@ function InLobby(props) {
             Launch
           </button>
         </React.Fragment>
+      ) : null}
+      {!isHost && !lobby.locked ? (
+        <p>Waiting for the host to launch the game</p>
       ) : null}
     </section>
   );
