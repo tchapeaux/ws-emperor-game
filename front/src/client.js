@@ -233,11 +233,7 @@ function BlameCard(props) {
 function BlameTheMysteries(props) {
   const { lobby } = props;
 
-  const isPlayerOwned = !!lobby.ownedBy[socket.id];
   const isInTurn = socket.id === lobby.turnOfPlayer;
-  const playerYouOwned = Object.entries(lobby.ownedBy).filter(
-    ([owneeId, ownerId]) => ownerId === socket.id
-  );
 
   return (
     <React.Fragment>
@@ -262,20 +258,59 @@ function BlameTheMysteries(props) {
           <BlameCard key={socketId} socketId={socketId} lobby={lobby} />
         ))}
       </ul>
-      {isPlayerOwned ? (
-        <p>You were defeated by {lobby.nicknames[lobby.ownedBy[socket.id]]}</p>
-      ) : null}
-      {playerYouOwned.length > 0 ? (
-        <React.Fragment>
-          <p>You defeated:</p>
-          <ul>
-            {playerYouOwned.map(([owneeId, ownerId]) => (
-              <li key={owneeId}>{lobby.nicknames[owneeId]}</li>
-            ))}
-          </ul>
-        </React.Fragment>
-      ) : null}
     </React.Fragment>
+  );
+}
+
+function YourTeam(props) {
+  const { lobby } = props;
+  const isPlayerOwned = !!lobby.ownedBy[socket.id];
+
+  // Explore the ownedBy directional graph to find all nodes that can be reached
+  let teamMemberIds = [socket.id];
+  while (true) {
+    let hasAddedMember = false;
+    for (const [owneeId, ownerId] of Object.entries(lobby.ownedBy)) {
+      if (teamMemberIds.includes(ownerId) && !teamMemberIds.includes(owneeId)) {
+        teamMemberIds.push(owneeId);
+        hasAddedMember = true;
+      }
+      if (teamMemberIds.includes(owneeId) && !teamMemberIds.includes(ownerId)) {
+        teamMemberIds.push(ownerId);
+        hasAddedMember = true;
+      }
+    }
+    if (!hasAddedMember) {
+      break;
+    }
+  }
+
+  const teamLeaderId = teamMemberIds.find((id) => !lobby.ownedBy[id]);
+
+  return (
+    <section id="yourTeam">
+      <h3>Your team</h3>
+      {teamMemberIds.length === 1 ? (
+        <p>Your team is currently empty</p>
+      ) : (
+        <ul>
+          {teamMemberIds
+            .filter((id) => id !== socket.id)
+            .map((teamMemberId) => (
+              <React.Fragment>
+                <li key={teamMemberId}>
+                  {lobby.nicknames[teamMemberId]}
+                  {" : "}
+                  {lobby.mysteryNames[teamMemberId]}
+                  {teamMemberId === teamLeaderId ? (
+                    <strong> (leader)</strong>
+                  ) : null}
+                </li>
+              </React.Fragment>
+            ))}
+        </ul>
+      )}
+    </section>
   );
 }
 
@@ -351,6 +386,7 @@ class App extends React.PureComponent {
             <InLobby lobby={lobby} />
             {lobby.locked ? <ChooseMysteryName lobby={lobby} /> : null}
             {lobby.phase1Locked ? <BlameTheMysteries lobby={lobby} /> : null}
+            {lobby.phase1Locked ? <YourTeam lobby={lobby} /> : null}
             {lobby.andTheWinnerIs ? (
               <React.Fragment>
                 <h3>And the Winner is...</h3>
