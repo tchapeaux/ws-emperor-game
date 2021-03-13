@@ -2,10 +2,10 @@
   "name": "ws-emperor-game-backend",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "server.js",
   "scripts": {
     "front:compile": "npx babel front/src --out-dir front/compiled --presets react-app/prod",
-    "serve": "node index.js",
+    "serve": "node server.js",
     "start": "run-s front:compile serve"
   },
   "author": "",
