@@ -145,6 +145,7 @@ module.exports = class Lobby {
     this.phase1Locked = false;
     this.displayOrder = null;
     this.turnOfPlayer = null;
+    this.lastAction = null;
 
     this.andTheWinnerIs = null;
     return true;
