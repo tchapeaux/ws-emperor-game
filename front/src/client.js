@@ -107,7 +107,7 @@ function InLobby(props) {
       {isHost && !lobby.locked ? (
         <React.Fragment>
           <h3>Launch game</h3>
-          {canLaunch ? null : <p>You need at least 3 players to launch</p>}
+          {canLaunch ? null : <p>You need at least 4 players to launch</p>}
           <button disabled={!canLaunch} onClick={onLaunchGame}>
             Launch
           </button>
@@ -346,7 +346,9 @@ class App extends React.PureComponent {
               <React.Fragment>
                 <h3>And the Winner is...</h3>
                 <p class="winner-name">
+                  {"🌟"}
                   {lobby.nicknames[lobby.andTheWinnerIs]}
+                  {"🌟"}
                 </p>
 
                 {lobby.host === socket.id ? (
