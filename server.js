@@ -189,9 +189,13 @@ function getLobbyOf(socket) {
   }
 
   const room = lobbies.find((l) => l.name === roomName);
-  if (room) {
+
+  if (!room) {
+    socket.emit("error", "Lobby does not exist");
+  } else {
     room.lastAccessDate = new Date();
   }
+
   return room;
 }
 
@@ -250,47 +254,42 @@ io.on("connection", (socket) => {
 
   socket.on("set nickname", (newNickname) => {
     const lobby = getLobbyOf(socket);
-    if (!lobby) {
-      return socket.emit("error", "Lobby does not exist");
+    if (lobby) {
+      lobby.setNickname(socket.id, newNickname);
+      io.in(lobby.name).emit("updated lobby", lobby);
     }
-    lobby.setNickname(socket.id, newNickname);
-    io.in(lobby.name).emit("updated lobby", lobby);
   });
 
   socket.on("launch game", () => {
     const lobby = getLobbyOf(socket);
-    if (!lobby) {
-      return socket.emit("error", "Lobby does not exist");
+    if (lobby) {
+      lobby.lockAndGo(socket.id);
+      io.in(lobby.name).emit("updated lobby", lobby);
     }
-    lobby.lockAndGo(socket.id);
-    io.in(lobby.name).emit("updated lobby", lobby);
   });
 
   socket.on("choose mystery", (mysteryName) => {
     const lobby = getLobbyOf(socket);
-    if (!lobby) {
-      return socket.emit("error", "Lobby does not exist");
+    if (lobby) {
+      lobby.setMysteryName(socket.id, mysteryName);
+      io.in(lobby.name).emit("updated lobby", lobby);
     }
-    lobby.setMysteryName(socket.id, mysteryName);
-    io.in(lobby.name).emit("updated lobby", lobby);
   });
 
   socket.on("blame", (mysteryName, blamedId) => {
     const lobby = getLobbyOf(socket);
-    if (!lobby) {
-      return socket.emit("error", "Lobby does not exist");
+    if (lobby) {
+      lobby.blame(socket.id, mysteryName, blamedId);
+      io.in(lobby.name).emit("updated lobby", lobby);
     }
-    lobby.blame(socket.id, mysteryName, blamedId);
-    io.in(lobby.name).emit("updated lobby", lobby);
   });
 
   socket.on("restart game", () => {
     const lobby = getLobbyOf(socket);
-    if (!lobby) {
-      return socket.emit("error", "Lobby does not exist");
+    if (lobby) {
+      lobby.restart(socket.id);
+      io.in(lobby.name).emit("updated lobby", lobby);
     }
-    lobby.restart(socket.id);
-    io.in(lobby.name).emit("updated lobby", lobby);
   });
 
   socket.on("disconnect", () => {
