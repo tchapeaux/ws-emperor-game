@@ -21,42 +21,54 @@ module.exports = class Lobby {
   }
 
   addPlayer(socketId, nickname) {
-    if (!this.locked && !Object.keys(this.nicknames).includes(socketId)) {
-      this.nicknames[socketId] = nickname;
+    if (this.locked || Object.keys(this.nicknames).includes(socketId)) {
+      return false;
     }
+
+    this.nicknames[socketId] = nickname;
 
     if (process.env.DEBUG) {
       // set last player as host
       this.host = socketId;
     }
+
+    return true;
   }
 
   setNickname(socketId, newNickname) {
-    if (!this.locked && Object.keys(this.nicknames).includes(socketId)) {
-      this.nicknames[socketId] = newNickname;
+    if (this.locked || !Object.keys(this.nicknames).includes(socketId)) {
+      return false;
     }
+    this.nicknames[socketId] = newNickname;
+    return true;
   }
 
   lockAndGo(socketId) {
-    if (socketId === this.host) {
-      this.locked = true;
+    if (socketId !== this.host) {
+      return false;
     }
+
+    this.locked = true;
+    return true;
   }
 
   setMysteryName(socketId, mysteryName) {
     if (
-      this.locked === true &&
-      !Object.keys(this.mysteryNames).includes(socketId)
+      this.locked === false ||
+      Object.keys(this.mysteryNames).includes(socketId)
     ) {
-      this.mysteryNames[socketId] = mysteryName;
-
-      if (
-        Object.keys(this.mysteryNames).length ===
-        Object.keys(this.nicknames).length
-      ) {
-        this.prepareGuessingGame();
-      }
+      return false;
     }
+    this.mysteryNames[socketId] = mysteryName;
+
+    if (
+      Object.keys(this.mysteryNames).length ===
+      Object.keys(this.nicknames).length
+    ) {
+      this.prepareGuessingGame();
+    }
+
+    return true;
   }
 
   prepareGuessingGame() {
@@ -79,17 +91,17 @@ module.exports = class Lobby {
 
     // blamer and blamed exist
     if (!playerIds.includes(blamerId) || !playerIds.includes(blamedId)) {
-      return;
+      return false;
     }
 
     // mysteryName exists
     if (!mysteryNames.includes(mysteryName)) {
-      return;
+      return false;
     }
 
     // it is the turn of the blamer
     if (this.turnOfPlayer !== blamerId) {
-      return;
+      return false;
     }
 
     // blamer and blamed are not owned
@@ -97,7 +109,7 @@ module.exports = class Lobby {
       Object.keys(this.ownedBy).includes(blamerId) ||
       Object.keys(this.ownedBy).includes(blamedId)
     ) {
-      return;
+      return false;
     }
 
     // Finally, let's do the blaming
@@ -119,11 +131,13 @@ module.exports = class Lobby {
       this.turnOfPlayer = null;
       this.andTheWinnerIs = blamerId;
     }
+
+    return true;
   }
 
   restart(socketId) {
     if (socketId !== this.host) {
-      return;
+      return false;
     }
 
     this.mysteryNames = {};
@@ -133,6 +147,7 @@ module.exports = class Lobby {
     this.turnOfPlayer = null;
 
     this.andTheWinnerIs = null;
+    return true;
   }
 
   // Host can kick player
