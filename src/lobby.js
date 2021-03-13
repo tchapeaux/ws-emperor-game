@@ -169,6 +169,7 @@ module.exports = class Lobby {
     }
 
     delete this.nicknames[kickedId];
+    this.disconnected = this.disconnected.filter((id) => id !== kickedId);
     return true;
   }
 
