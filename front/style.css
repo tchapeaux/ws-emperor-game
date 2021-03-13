@@ -13,7 +13,7 @@ input {
 }
 
 button {
-  font-size: 1em;
+  font-size: 0.76em;
   padding: 5px 15px;
   cursor: pointer;
   border: 2px transparent solid;
