@@ -176,6 +176,15 @@ module.exports = class Lobby {
     if (Object.keys(this.nicknames).includes(disconnectedId)) {
       this.disconnected.push(disconnectedId);
     }
+
+    if (disconnectedId === this.host) {
+      const stillConnectedIds = Object.keys(this.nicknames).filter(
+        (id) => !this.disconnected.includes(id)
+      );
+      if (stillConnectedIds.length > 0) {
+        this.host = stillConnectedIds[getRandomInt(stillConnectedIds.length)];
+      }
+    }
   }
 
   reconnectPlayer(reconnectedId) {
