@@ -180,11 +180,12 @@ function ChooseMysteryName(props) {
 }
 
 function BlameCard(props) {
-  const { lobby, socketId } = props;
+  const { lobby, cardSocketId } = props;
   const [blamedId, setBlamedId] = React.useState("none");
 
-  const mysteryName = lobby.mysteryNames[socketId];
-  const isAlreadyOwned = !!lobby.ownedBy[socketId];
+  const mysteryName = lobby.mysteryNames[cardSocketId];
+  const isAlreadyOwned = !!lobby.ownedBy[cardSocketId];
+  const isYours = cardSocketId === socket.id;
   const isInTurn = socket.id === lobby.turnOfPlayer;
   const notOwnedPlayerIds = Object.keys(lobby.nicknames).filter(
     (pId) => !lobby.ownedBy[pId]
@@ -223,14 +224,19 @@ function BlameCard(props) {
           <button onClick={onSubmit}>Guess</button>
         </React.Fragment>
       ) : null}
+      {isYours && !isAlreadyOwned ? (
+        <p>
+          <strong>(Your card)</strong>
+        </p>
+      ) : null}
       {isAlreadyOwned ? (
         <React.Fragment>
           <p>
-            Was: <strong>{lobby.nicknames[socketId]}</strong>
+            Chosen by: <strong>{lobby.nicknames[cardSocketId]}</strong>
           </p>
           <p>
             Guessed by:{" "}
-            <strong>{lobby.nicknames[lobby.ownedBy[socketId]]}</strong>
+            <strong>{lobby.nicknames[lobby.ownedBy[cardSocketId]]}</strong>
           </p>
         </React.Fragment>
       ) : null}
@@ -263,7 +269,7 @@ function BlameTheMysteries(props) {
 
       <ul className="mysteryList">
         {lobby.displayOrder.map((socketId) => (
-          <BlameCard key={socketId} socketId={socketId} lobby={lobby} />
+          <BlameCard key={socketId} cardSocketId={socketId} lobby={lobby} />
         ))}
       </ul>
     </React.Fragment>
