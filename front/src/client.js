@@ -237,14 +237,14 @@ function BlameTheMysteries(props) {
         <p>You were defeated by {lobby.nicknames[lobby.ownedBy[socket.id]]}</p>
       ) : null}
       {playerYouOwned.length > 0 ? (
-        <p>
-          You defeated:
+        <React.Fragment>
+          <p>You defeated:</p>
           <ul>
             {playerYouOwned.map(([owneeId, ownerId]) => (
               <li key={owneeId}>{lobby.nicknames[owneeId]}</li>
             ))}
           </ul>
-        </p>
+        </React.Fragment>
       ) : null}
     </React.Fragment>
   );
