@@ -415,7 +415,9 @@ class App extends React.PureComponent {
         {appState === "IN_LOBBY" ? (
           <React.Fragment>
             <InLobby lobby={lobby} />
-            {lobby.locked ? <ChooseMysteryName lobby={lobby} /> : null}
+            {lobby.locked && !lobby.phase1Locked ? (
+              <ChooseMysteryName lobby={lobby} />
+            ) : null}
             {lobby.phase1Locked ? <BlameTheMysteries lobby={lobby} /> : null}
             {lobby.phase1Locked ? <YourTeam lobby={lobby} /> : null}
             {lobby.andTheWinnerIs ? (
