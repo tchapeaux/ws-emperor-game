@@ -16,8 +16,21 @@ function getRandomUsername() {
   return superheroes.random();
 }
 
+function validateParam(param, maxLength = 30) {
+  if (typeof param !== "string") {
+    return false;
+  }
+
+  if (maxLength > 0 && param.length > maxLength) {
+    return false;
+  }
+
+  return true;
+}
+
 module.exports = {
   shuffleArray,
   getRandomInt,
   getRandomUsername,
+  validateParam,
 };

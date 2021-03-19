@@ -5,7 +5,7 @@ const io = require("socket.io")(http);
 require("dotenv").config();
 
 const Lobby = require("./src/lobby.js");
-const { getRandomUsername } = require("./src/helpers.js");
+const { getRandomUsername, validateParam } = require("./src/helpers.js");
 
 const lobbies = [];
 const sockets = [];
@@ -60,6 +60,10 @@ io.on("connection", (socket) => {
       return socket.emit("error", "Already in a lobby");
     }
 
+    if (!validateParam(lobbyName)) {
+      return socket.emit("error", "Invalid lobby name");
+    }
+
     const lobby = new Lobby(lobbyName, socket.id);
     lobbies.push(lobby);
 
@@ -94,6 +98,10 @@ io.on("connection", (socket) => {
   });
 
   socket.on("set nickname", (newNickname) => {
+    if (!validateParam(newNickname)) {
+      return socket.emit("error", "Invalid nickname");
+    }
+
     const lobby = getLobbyOf(socket);
     if (lobby && lobby.setNickname(socket.id, newNickname)) {
       io.in(lobby.name).emit("updated lobby", lobby.getRepresentation());
@@ -108,6 +116,10 @@ io.on("connection", (socket) => {
   });
 
   socket.on("choose mystery", (mysteryName) => {
+    if (!validateParam(mysteryName)) {
+      return socket.emit("error", "Invalid mystery name");
+    }
+
     const lobby = getLobbyOf(socket);
     if (lobby && lobby.setMysteryName(socket.id, mysteryName)) {
       io.in(lobby.name).emit("updated lobby", lobby.getRepresentation());
