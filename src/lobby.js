@@ -20,6 +20,24 @@ module.exports = class Lobby {
     this.andTheWinnerIs = null;
   }
 
+  // Return a minimal object to be sent over the socket
+  getRepresentation() {
+    return {
+      name: this.name,
+      host: this.host,
+      nicknames: this.nicknames,
+      mysteryNames: this.mysteryNames,
+      ownedBy: this.ownedBy,
+      disconnected: this.disconnected,
+      locked: this.locked,
+      phase1Locked: this.phase1Locked,
+      displayOrder: this.displayOrder,
+      turnOfPlayer: this.turnOfPlayer,
+      lastAction: this.lastAction,
+      andTheWinnerIs: this.andTheWinnerIs,
+    };
+  }
+
   addPlayer(socketId, nickname) {
     if (this.locked || Object.keys(this.nicknames).includes(socketId)) {
       return false;

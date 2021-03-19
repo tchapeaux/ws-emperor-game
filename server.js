@@ -68,7 +68,9 @@ io.on("connection", (socket) => {
 
       socket.join(lobbyName);
       socket.emit("joined lobby", lobby);
-      socket.in(lobbyName).broadcast.emit("updated lobby", lobby);
+      socket
+        .in(lobbyName)
+        .broadcast.emit("updated lobby", lobby.getRepresentation());
     }
   });
 
@@ -87,42 +89,42 @@ io.on("connection", (socket) => {
 
       socket.join(lobbyName);
       socket.emit("joined lobby", lobby);
-      io.in(lobbyName).emit("updated lobby", lobby);
+      io.in(lobbyName).emit("updated lobby", lobby.getRepresentation());
     }
   });
 
   socket.on("set nickname", (newNickname) => {
     const lobby = getLobbyOf(socket);
     if (lobby && lobby.setNickname(socket.id, newNickname)) {
-      io.in(lobby.name).emit("updated lobby", lobby);
+      io.in(lobby.name).emit("updated lobby", lobby.getRepresentation());
     }
   });
 
   socket.on("launch game", () => {
     const lobby = getLobbyOf(socket);
     if (lobby && lobby.lockAndGo(socket.id)) {
-      io.in(lobby.name).emit("updated lobby", lobby);
+      io.in(lobby.name).emit("updated lobby", lobby.getRepresentation());
     }
   });
 
   socket.on("choose mystery", (mysteryName) => {
     const lobby = getLobbyOf(socket);
     if (lobby && lobby.setMysteryName(socket.id, mysteryName)) {
-      io.in(lobby.name).emit("updated lobby", lobby);
+      io.in(lobby.name).emit("updated lobby", lobby.getRepresentation());
     }
   });
 
   socket.on("blame", (mysteryName, blamedId) => {
     const lobby = getLobbyOf(socket);
     if (lobby && lobby.blame(socket.id, mysteryName, blamedId)) {
-      io.in(lobby.name).emit("updated lobby", lobby);
+      io.in(lobby.name).emit("updated lobby", lobby.getRepresentation());
     }
   });
 
   socket.on("restart game", () => {
     const lobby = getLobbyOf(socket);
     if (lobby && lobby.restart(socket.id)) {
-      io.in(lobby.name).emit("updated lobby", lobby);
+      io.in(lobby.name).emit("updated lobby", lobby.getRepresentation());
     }
   });
 
@@ -132,7 +134,7 @@ io.on("connection", (socket) => {
       kickedSocket = sockets.find((s) => s.id === kickedId);
       kickedSocket.leave(lobby.name);
       kickedSocket.emit("you were kicked");
-      io.in(lobby.name).emit("updated lobby", lobby);
+      io.in(lobby.name).emit("updated lobby", lobby.getRepresentation());
     }
   });
 
@@ -142,7 +144,7 @@ io.on("connection", (socket) => {
     const lobby = getLobbyOf(socket, (mustExist = false));
     if (lobby) {
       lobby.disconnectPlayer(socket.id);
-      io.in(lobby.name).emit("updated lobby", lobby);
+      io.in(lobby.name).emit("updated lobby", lobby.getRepresentation());
     }
   });
 
@@ -152,7 +154,7 @@ io.on("connection", (socket) => {
     const lobby = getLobbyOf(socket, (mustExist = false));
     if (lobby) {
       lobby.reconnectPlayer(socket.id);
-      io.in(lobby.name).emit("updated lobby", lobby);
+      io.in(lobby.name).emit("updated lobby", lobby.getRepresentation());
     }
   });
 });
