@@ -357,8 +357,8 @@ class App extends React.PureComponent {
       });
     });
 
-    // auto-join lobby if there is a lobby= URL parameter
     try {
+      // auto-join lobby if there is a lobby= URL parameter
       const queryString = window.location.search;
       const urlParams = new URLSearchParams(queryString);
       const lobbyParam = urlParams.get("lobby");
