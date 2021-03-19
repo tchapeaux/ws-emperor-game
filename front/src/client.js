@@ -226,7 +226,7 @@ function BlameCard(props) {
       ) : null}
       {isYours && !isAlreadyOwned ? (
         <p>
-          <strong>(Your card)</strong>
+          <strong>(You)</strong>
         </p>
       ) : null}
       {isAlreadyOwned ? (
@@ -278,9 +278,8 @@ function BlameTheMysteries(props) {
 
 function YourTeam(props) {
   const { lobby } = props;
-  const isPlayerOwned = !!lobby.ownedBy[socket.id];
 
-  // Explore the ownedBy directional graph to find all nodes that can be reached
+  // Explore the ownedBy directional graph to find all nodes that can be reached from us
   let teamMemberIds = [socket.id];
   while (true) {
     let hasAddedMember = false;
@@ -307,23 +306,58 @@ function YourTeam(props) {
       {teamMemberIds.length === 1 ? (
         <p>Your team is currently empty</p>
       ) : (
-        <ul>
-          {teamMemberIds
-            .filter((id) => id !== socket.id)
-            .map((teamMemberId) => (
-              <React.Fragment>
-                <li key={teamMemberId}>
-                  {lobby.nicknames[teamMemberId]}
-                  {" : "}
-                  {lobby.mysteryNames[teamMemberId]}
-                  {teamMemberId === teamLeaderId ? (
-                    <strong> (leader)</strong>
-                  ) : null}
-                </li>
-              </React.Fragment>
-            ))}
-        </ul>
+        <React.Fragment>
+          <h4>Members</h4>
+          <ul>
+            {teamMemberIds
+              .filter((id) => id !== socket.id)
+              .map((tmId) => (
+                <React.Fragment key={tmId}>
+                  <li>
+                    {lobby.nicknames[tmId]}
+                    {" : "}
+                    {lobby.mysteryNames[tmId]}
+                    {tmId === teamLeaderId ? <strong> (leader)</strong> : null}
+                  </li>
+                </React.Fragment>
+              ))}
+          </ul>
+          <h4>Private chat</h4>
+          <YourTeamChat lobby={lobby} teamMemberIds={teamMemberIds} />
+        </React.Fragment>
       )}
+    </section>
+  );
+}
+
+function YourTeamChat(props) {
+  const { lobby, teamMemberIds } = props;
+
+  const [newMsg, setNewMsg] = React.useState("");
+
+  const onSendNewMsg = () => {
+    socket.emit("send chat", newMsg);
+    setNewMsg("");
+  };
+
+  const chatMessages = lobby.chats
+    .filter((msg) => teamMemberIds.includes(msg.author))
+    .sort(({ time: time1 }, { time: time2 }) => time1 - time2);
+
+  return (
+    <section className="team-chat">
+      {chatMessages.map(({ author: authorId, time, msg }) => (
+        <p key={`${authorId}-${time}`}>
+          <strong>{lobby.nicknames[authorId]}</strong>: {msg}
+        </p>
+      ))}
+      <input
+        onChange={({ target: { value } }) => setNewMsg(value)}
+        placeholder="Your message"
+        type="text"
+        value={newMsg}
+      />
+      <button onClick={onSendNewMsg}>Send</button>
     </section>
   );
 }

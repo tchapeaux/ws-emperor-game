@@ -133,6 +133,17 @@ io.on("connection", (socket) => {
     }
   });
 
+  socket.on("send chat", (msg) => {
+    if (!validateParam(msg, (maxLength = 100))) {
+      return socket.emit("error", "Invalid chat message");
+    }
+
+    const lobby = getLobbyOf(socket);
+    if (lobby && lobby.sendChat(socket.id, msg)) {
+      io.in(lobby.name).emit("updated lobby", lobby.getRepresentation());
+    }
+  });
+
   socket.on("restart game", () => {
     const lobby = getLobbyOf(socket);
     if (lobby && lobby.restart(socket.id)) {

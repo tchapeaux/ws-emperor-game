@@ -98,3 +98,8 @@ select {
 .blameCard > * {
   margin: 5px 0px;
 }
+
+.team-chat {
+  font: mono;
+  font-size: 0.5em;
+}

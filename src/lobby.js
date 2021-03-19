@@ -17,6 +17,8 @@ module.exports = class Lobby {
     this.turnOfPlayer = null;
     this.lastAction = null;
 
+    this.chats = [];
+
     this.andTheWinnerIs = null;
   }
 
@@ -34,6 +36,7 @@ module.exports = class Lobby {
       displayOrder: this.displayOrder,
       turnOfPlayer: this.turnOfPlayer,
       lastAction: this.lastAction,
+      chats: this.chats,
       andTheWinnerIs: this.andTheWinnerIs,
     };
   }
@@ -141,6 +144,9 @@ module.exports = class Lobby {
       this.turnOfPlayer = blamedId;
     }
 
+    // Reset chats
+    this.chats = [];
+
     // WIN condition
     if (
       Object.keys(this.ownedBy).length ===
@@ -150,6 +156,12 @@ module.exports = class Lobby {
       this.andTheWinnerIs = blamerId;
     }
 
+    return true;
+  }
+
+  sendChat(socketId, msg) {
+    const timestamp = Date.now();
+    this.chats.push({ author: socketId, time: timestamp, msg });
     return true;
   }
 
